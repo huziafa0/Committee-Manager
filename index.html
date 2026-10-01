@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="ur" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0d6b4f">
+<title>Committee Manager</title>
+<style>
+:root{--ink:#12302a;--g:#0d6b4f;--g2:#dcefe5;--y:#f3b61f;--bg:#f2f6f4;--red:#b3261e;--w:#fff}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:20px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+html[lang=ur] body{font-family:"Noto Nastaliq Urdu","Jameel Noori Nastaleeq","Noto Naskh Arabic",system-ui,sans-serif;line-height:1.95}
+#app{max-width:520px;margin:0 auto;padding:12px 14px 40px}
+header{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:12px}
+h1{font-size:26px;margin:0;color:var(--g)}
+h2{font-size:28px;margin:0}h3{font-size:21px;margin:22px 0 6px}
+button,.btn{font:inherit;font-weight:700;border:0;border-radius:16px;min-height:60px;padding:10px 16px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;text-decoration:none;color:var(--w);background:var(--g);width:100%;margin:10px 0}
+button:active,.btn:active{transform:scale(.98)}
+button:disabled{opacity:.4}
+button:focus-visible,input:focus-visible,.btn:focus-visible{outline:4px solid var(--y)}
+.lang,.back{width:auto;min-height:48px;margin:0;background:var(--w);color:var(--g);border:2px solid var(--g)}
+.big{justify-content:flex-start;min-height:76px;font-size:22px}.big span{font-size:32px}
+.y{background:var(--y);color:var(--ink)}
+.wa{background:#25d366;color:var(--ink)}
+.ghost{background:var(--w);color:var(--g);border:2px solid var(--g)}
+.hero{background:var(--g);color:var(--w);border-radius:20px;padding:18px 20px;margin-bottom:14px}
+.hero p{margin:4px 0 0;font-size:19px}
+.sub{font-size:19px;opacity:.85}.warn{color:var(--red);font-weight:700}
+label{display:block;font-weight:700;margin-top:14px}
+input{font:inherit;width:100%;min-height:58px;padding:8px 14px;border:2px solid #9bb8ab;border-radius:14px;background:var(--w);color:var(--ink)}
+.row{background:var(--w);border-radius:16px;padding:12px 14px;margin:10px 0;border-inline-start:10px solid var(--y)}
+.row.ok{border-inline-color:var(--g)}
+.row b{font-size:22px;display:block}
+.row button,.row .btn{margin:8px 0 0}
+.pay{background:var(--w);color:var(--ink);border:2px solid var(--y)}
+.ok .pay{background:var(--g);color:var(--w);border-color:var(--g)}
+.ms{display:flex;align-items:center;gap:8px;margin:6px 0 10px}
+.ms b{flex:1;text-align:center;font-size:23px}
+.ms button{width:64px;margin:0;font-size:30px}
+.stat{font-size:19px;margin:0 0 6px}
+.reel{background:var(--w);border:4px dashed var(--y);border-radius:24px;min-height:170px;display:flex;align-items:center;justify-content:center;text-align:center;font-size:40px;font-weight:800;padding:12px;margin:12px 0;word-break:break-word}
+.reel.spin{color:var(--g)}
+.reel.won{background:var(--g2);border-style:solid;border-color:var(--g);animation:pop .6s}
+@keyframes pop{0%{transform:scale(.7)}60%{transform:scale(1.08)}100%{transform:scale(1)}}
+@media (prefers-reduced-motion:reduce){.reel.won{animation:none}}
+.del{width:56px;min-height:48px;margin:0;background:var(--red);flex:none}
+.mrow{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.mrow small{display:block;font-size:17px;opacity:.7}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<input type="file" id="imp" accept=".json,application/json" hidden>
+<script>
+const K='committee_manager_v1';
+const EN=['January','February','March','April','May','June','July','August','September','October','November','December'];
+const UR=['جنوری','فروری','مارچ','اپریل','مئی','جون','جولائی','اگست','ستمبر','اکتوبر','نومبر','دسمبر'];
+const L={en:{app:'Committee Manager',welcome:'Welcome! Start by creating your committee.',create:'Create committee',edit:'Committee details',members:'Members',month:"This month's payments",draw:'Draw turns',backup:'Backup',back:'Back',name:'Committee name',amount:'Monthly amount (Rs)',nm:'Number of members',start:'Start month',due:'Due day of each month (1-28)',save:'Save',mname:'Member name',mphone:'WhatsApp number (03xx xxxxxxx)',add:'Add member',paid:'Paid',unpaid:'Not paid',remind:'Remind on WhatsApp',share:'Share summary to group',drawbtn:'Draw next turn',turnof:'Turn for',needmore:'Add all members first',hist:'Turns so far',exp:'Save backup file',imp:'Restore from backup',backupnote:'Your data is saved only on this phone. Save a backup file now and then.',permonth:'per month',dueon:'Due day:',of:'of',collected:'Collected',full:'All members are already added.',bad:'Please fill all fields correctly.',badph:'Please enter a valid WhatsApp number.',sure:'Remove this member?',drawn:'This member already has a turn, so cannot be removed.',ok:'Restored!',badfile:'This file is not a valid backup.',replace:'This will replace the data on this phone. Continue?',nomem:'No members yet.',saved:'Saved'},
+ur:{app:'کمیٹی منیجر',welcome:'خوش آمدید! پہلے اپنی کمیٹی بنائیں۔',create:'کمیٹی بنائیں',edit:'کمیٹی کی تفصیل',members:'ممبران',month:'اس مہینے کی ادائیگی',draw:'باری نکالیں',backup:'بیک اپ',back:'واپس',name:'کمیٹی کا نام',amount:'ماہانہ رقم (روپے)',nm:'ممبران کی تعداد',start:'شروع کا مہینہ',due:'ہر مہینے کی آخری تاریخ (1 سے 28)',save:'محفوظ کریں',mname:'ممبر کا نام',mphone:'واٹس ایپ نمبر (03xx xxxxxxx)',add:'ممبر شامل کریں',paid:'ادا ہو گیا',unpaid:'ادا نہیں ہوا',remind:'واٹس ایپ پر یاد دلائیں',share:'خلاصہ گروپ میں بھیجیں',drawbtn:'اگلی باری نکالیں',turnof:'باری کا مہینہ',needmore:'پہلے سب ممبران شامل کریں',hist:'اب تک کی باریاں',exp:'بیک اپ فائل محفوظ کریں',imp:'بیک اپ واپس لائیں',backupnote:'آپ کا ڈیٹا صرف اسی فون میں ہے۔ وقتاً فوقتاً بیک اپ فائل محفوظ کر لیں۔',permonth:'ماہانہ',dueon:'آخری تاریخ:',of:'میں سے',collected:'جمع ہوئے',full:'سب ممبران شامل ہو چکے ہیں۔',bad:'براہ کرم سب خانے صحیح بھریں۔',badph:'براہ کرم صحیح واٹس ایپ نمبر لکھیں۔',sure:'یہ ممبر ہٹا دیں؟',drawn:'اس ممبر کی باری نکل چکی ہے، اس لیے ہٹایا نہیں جا سکتا۔',ok:'واپس آ گیا!',badfile:'یہ فائل درست بیک اپ نہیں ہے۔',replace:'اس فون کا ڈیٹا بدل جائے گا۔ جاری رکھیں؟',nomem:'ابھی کوئی ممبر نہیں۔',saved:'محفوظ ہو گیا'}};
+const $=s=>document.querySelector(s);
+const e=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const fmt=n=>String(n).replace(/\B(?=(\d{3})+(?!\d))/g,',');
+const rnd=n=>{const a=new Uint32Array(1);crypto.getRandomValues(a);return a[0]%n};
+let D;try{D=JSON.parse(localStorage.getItem(K))||{}}catch(x){D={}}
+if(!D.lang)D.lang='ur';
+let S={scr:'home',vm:null,won:null};
+const t=k=>L[D.lang][k];
+const save=()=>{try{localStorage.setItem(K,JSON.stringify(D))}catch(x){alert('Phone storage is full / فون کی جگہ ختم')}};
+const keys=c=>{let[y,m]=c.start.split('-').map(Number),a=[];for(let i=0;i<c.n;i++){a.push(y+'-'+String(m).padStart(2,'0'));if(++m>12){m=1;y++}}return a};
+const mlabel=(k,l)=>{const[y,m]=k.split('-');return(l==='en'?EN:D.lang==='ur'?UR:EN)[m-1]+' '+y};
+const dueDate=(k,c)=>{const[y,m]=k.split('-').map(Number);return Math.min(c.due,new Date(y,m,0).getDate())+' '+EN[m-1]+' '+y};
+const wanum=p=>{let d=p.replace(/\D/g,'');if(d.startsWith('00'))d=d.slice(2);if(d[0]==='0')d='92'+d.slice(1);else if(d.length===10&&d[0]==='3')d='92'+d;return d};
+const initVm=()=>{const c=D.c;if(!c)return;const ks=keys(c),n=new Date(),now=n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0');if(!ks.includes(S.vm))S.vm=ks.includes(now)?now:(now>ks[ks.length-1]?ks[ks.length-1]:ks[0])};
+const B=(s,i,l,c)=>`<button class="big ${c||''}" data-a="go" data-s="${s}"><span>${i}</span>${l}</button>`;
+const ms=()=>{const ks=keys(D.c),i=ks.indexOf(S.vm),u=D.lang==='ur';return`<div class="ms"><button data-a="mv" data-d="-1" ${i<1?'disabled':''}>${u?'›':'‹'}</button><b>${mlabel(S.vm)}</b><button data-a="mv" data-d="1" ${i>=ks.length-1?'disabled':''}>${u?'‹':'›'}</button></div>`};
+const turnName=(c,k)=>{const d=c.draws.find(x=>x.m===k),m=d&&c.members.find(x=>x.id===d.id);return m?m.name:null};
+function summary(c,k){const p=c.paid[k]||[],a=c.members.filter(m=>p.includes(m.id)).map(m=>'✅ '+m.name),b=c.members.filter(m=>!p.includes(m.id)).map(m=>'❌ '+m.name);
+return`*${c.name}* - ${mlabel(k,'en')}\nQist: Rs ${fmt(c.amount)}\n\nQist de di:\n${a.join('\n')||'-'}\n\nBaqi:\n${b.join('\n')||'-'}\n\nIs mahine ki baari: ${turnName(c,k)||'abhi nahi nikli'}\n\nShukriya!`}
+const V={
+home(){const c=D.c;if(!c)return`<p class="sub">${t('welcome')}</p>`+B('setup','✨',t('create'),'y')+B('backup','💾',t('backup'));
+return`<div class="hero"><h2>${e(c.name)}</h2><p>Rs ${fmt(c.amount)} ${t('permonth')}</p><p>${t('dueon')} ${c.due}</p><p>${c.members.length} ${t('of')} ${c.n} ${t('members')}</p></div>`+B('month','💰',t('month'))+B('draw','🎲',t('draw'),'y')+B('members','👥',t('members'))+B('setup','⚙️',t('edit'))+B('backup','💾',t('backup'))},
+setup(){const c=D.c||{},n=new Date(),def=n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0');
+return`<h2>${t(D.c?'edit':'create')}</h2><label>${t('name')}</label><input id="f_name" value="${e(c.name||'')}"><label>${t('amount')}</label><input id="f_amt" type="number" inputmode="numeric" value="${c.amount||''}"><label>${t('nm')}</label><input id="f_n" type="number" inputmode="numeric" value="${c.n||''}"><label>${t('start')}</label><input id="f_start" type="month" value="${c.start||def}"><label>${t('due')}</label><input id="f_due" type="number" inputmode="numeric" min="1" max="28" value="${c.due||''}"><button data-a="savec">${t('save')}</button>`},
+members(){const c=D.c;return`<h2>${t('members')} (${c.members.length}/${c.n})</h2>`+(c.members.length?c.members.map(m=>`<div class="row"><div class="mrow"><div><b>${e(m.name)}</b><small dir="ltr">${e(m.phone)}</small></div><button class="del" data-a="del" data-id="${m.id}">✕</button></div></div>`).join(''):`<p class="sub">${t('nomem')}</p>`)+(c.members.length<c.n?`<label>${t('mname')}</label><input id="m_name"><label>${t('mphone')}</label><input id="m_phone" type="tel" inputmode="tel" dir="ltr"><button data-a="addm">➕ ${t('add')}</button>`:`<p class="sub">${t('full')}</p>`)},
+month(){const c=D.c,k=S.vm,p=c.paid[k]||[],due=dueDate(k,c);
+return ms()+`<p class="stat">${p.length} ${t('of')} ${c.members.length} ${t('paid')} — ${t('collected')}: Rs ${fmt(p.length*c.amount)}</p>`+c.members.map(m=>{const ok=p.includes(m.id),msg=`Assalam o Alaikum ${m.name}, committee ki qist Rs ${fmt(c.amount)} ${due} tak. Shukriya!`;
+return`<div class="row ${ok?'ok':''}"><b>${e(m.name)}</b><button class="pay" data-a="tog" data-id="${m.id}">${ok?'✓ '+t('paid'):t('unpaid')}</button>${ok?'':`<a class="btn wa" target="_blank" rel="noopener" href="https://wa.me/${wanum(m.phone)}?text=${encodeURIComponent(msg)}">💬 ${t('remind')}</a>`}</div>`}).join('')+`<a class="btn ghost" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent(summary(c,k))}">📤 ${t('share')}</a>`},
+draw(){const c=D.c,w=turnName(c,S.vm),short=c.members.length<c.n,left=c.members.some(m=>!c.draws.some(x=>x.id===m.id));
+const hist=c.draws.slice().sort((a,b)=>a.m<b.m?-1:1).map(d=>`<div class="row ok"><b>${mlabel(d.m)}</b>${e(c.members.find(m=>m.id===d.id).name)}</div>`).join('');
+return ms()+`<div class="reel ${w?'won':''}" id="reel">${w?'🎉 '+e(w):'🎲'}</div>`+(short?`<p class="warn">${t('needmore')} (${c.members.length}/${c.n})</p>`:'')+`<button id="drawbtn" class="y" data-a="draw" ${w||short||!left?'disabled':''}>🎲 ${t('drawbtn')}</button>`+(hist?`<h3>${t('hist')}</h3>${hist}`:'')},
+backup(){return`<h2>${t('backup')}</h2><p class="sub">${t('backupnote')}</p><button data-a="exp">💾 ${t('exp')}</button><button class="ghost" data-a="imp">📂 ${t('imp')}</button>`}};
+function render(){const l=D.lang;document.documentElement.lang=l;document.documentElement.dir=l==='ur'?'rtl':'ltr';
+const top=`<header>${S.scr==='home'?`<h1>${t('app')}</h1>`:`<button class="back" data-a="go" data-s="home">${l==='ur'?'→':'←'} ${t('back')}</button>`}<button class="lang" data-a="lang">${l==='ur'?'English':'اردو'}</button></header>`;
+$('#app').innerHTML=top+V[S.scr]();window.scrollTo(0,0)}
+function doDraw(){const c=D.c,pool=c.members.filter(m=>!c.draws.some(x=>x.id===m.id));if(!pool.length||turnName(c,S.vm))return;
+const w=pool[rnd(pool.length)];c.draws.push({m:S.vm,id:w.id});save();
+const r=$('#reel');$('#drawbtn').disabled=true;let n=0,delay=60;
+(function step(){if(n>=18){if(navigator.vibrate)navigator.vibrate(300);render();return}r.textContent=pool[rnd(pool.length)].name;r.className='reel spin';n++;delay*=1.14;setTimeout(step,delay)})()}
+document.addEventListener('click',ev=>{const el=ev.target.closest('[data-a]');if(!el)return;const a=el.dataset.a,c=D.c;
+if(a==='go'){S.scr=el.dataset.s;if(!c&&['month','draw','members'].includes(S.scr))S.scr='setup';initVm();render()}
+else if(a==='lang'){D.lang=D.lang==='ur'?'en':'ur';save();render()}
+else if(a==='mv'){const ks=keys(c);S.vm=ks[ks.indexOf(S.vm)+Number(el.dataset.d)]||S.vm;render()}
+else if(a==='tog'){const p=c.paid[S.vm]=c.paid[S.vm]||[],i=p.indexOf(el.dataset.id);i<0?p.push(el.dataset.id):p.splice(i,1);save();render()}
+else if(a==='savec'){const v=id=>$(id).value.trim(),name=v('#f_name'),amt=+v('#f_amt'),n=+v('#f_n'),st=v('#f_start'),due=+v('#f_due');
+if(!name||!(amt>0)||!(n>=2&&n<=60)||!st||!(due>=1&&due<=28)||(c&&c.members.length>n))return alert(t('bad'));
+D.c=Object.assign({members:[],paid:{},draws:[]},c,{name,amount:amt,n,start:st,due});save();S.vm=null;S.scr='home';initVm();render()}
+else if(a==='addm'){const nm=$('#m_name').value.trim(),ph=$('#m_phone').value.trim();if(!nm)return alert(t('bad'));if(wanum(ph).length<11)return alert(t('badph'));
+c.members.push({id:Date.now().toString(36)+rnd(1e4),name:nm,phone:ph});save();render();$('#m_name')&&$('#m_name').focus()}
+else if(a==='del'){const id=el.dataset.id;if(c.draws.some(x=>x.id===id))return alert(t('drawn'));if(!confirm(t('sure')))return;c.members=c.members.filter(m=>m.id!==id);Object.keys(c.paid).forEach(k=>c.paid[k]=c.paid[k].filter(x=>x!==id));save();render()}
+else if(a==='draw')doDraw();
+else if(a==='exp'){const f=document.createElement('a');f.href=URL.createObjectURL(new Blob([JSON.stringify(D)],{type:'application/json'}));f.download='committee-backup-'+new Date().toISOString().slice(0,10)+'.json';f.click()}
+else if(a==='imp')$('#imp').click()});
+$('#imp').addEventListener('change',ev=>{const f=ev.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const j=JSON.parse(r.result);if(!j||typeof j!=='object'||(j.c&&(!Array.isArray(j.c.members)||!j.c.start)))throw 0;if(!confirm(t('replace')))return;D=j;if(!D.lang)D.lang='ur';save();S={scr:'home',vm:null,won:null};initVm();render();alert(t('ok'))}catch(x){alert(t('badfile'))}};r.readAsText(f);ev.target.value=''});
+initVm();render();
+</script>
+</body>
+</html>
